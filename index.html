@@ -90,6 +90,22 @@
     </style>
 </head>
 <body>
+
+    <!-- Modal de Aviso Beta -->
+    <div id="beta-modal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-lg shadow-xl p-6 md:p-8 max-w-lg w-full text-center transform transition-all opacity-0 translate-y-4" id="modal-content">
+            <h2 class="text-2xl font-bold text-yellow-600 mb-4">Atenção: Versão Beta</h2>
+            <p class="text-gray-700 mb-4">
+                Olá! Esta calculadora é uma versão de testes e está em contínuo desenvolvimento. Estamos trabalhando para adicionar melhorias e novos recursos em breve.
+            </p>
+            <p class="text-gray-700 mb-6">
+                Caso encontre algum erro ou tenha sugestões, por favor, entre em contato através do link no menu "Guia de Estudos" em nosso site principal. Sua ajuda é muito importante!
+            </p>
+            <button id="close-modal-btn" class="btn btn-primary px-8 py-2 rounded-lg font-semibold">Entendi</button>
+        </div>
+    </div>
+
+
     <main class="flex items-center justify-center p-4">
         <div class="w-full max-w-3xl mx-auto">
             <div class="calculator-card p-6 md:p-8">
@@ -146,7 +162,7 @@
     <!-- Rodapé -->
     <footer class="footer mt-12 py-8 text-center">
         <div class="container mx-auto px-4">
-            <p class="mb-4">&copy;  2025 - Guia de estudos.</p>
+            <p class="mb-4">&copy; 2024 Repro FIV. Todos os direitos reservados.</p>
             <p class="text-gray-300 text-sm mb-6">Uberaba, Minas Gerais, Brasil</p>
             <a href="https://repro-fiv.vercel.app/#/" target="_blank" rel="noopener noreferrer" class="bg-white text-gray-800 font-bold py-2 px-6 rounded-lg hover:bg-gray-200 transition-colors">
                 Voltar ao site de estudos
@@ -279,21 +295,41 @@
             const { jsPDF } = window.jspdf;
             const content = document.getElementById('print-area');
             
-            // Usar html2canvas para capturar o conteúdo como uma imagem
             html2canvas(content, { scale: 2 }).then(canvas => {
                 const imgData = canvas.toDataURL('image/png');
                 const pdf = new jsPDF('p', 'mm', 'a4');
                 const pdfWidth = pdf.internal.pageSize.getWidth();
-                const pdfHeight = pdf.internal.pageSize.getHeight();
                 const canvasWidth = canvas.width;
                 const canvasHeight = canvas.height;
                 const ratio = canvasWidth / canvasHeight;
                 const width = pdfWidth - 20; // com margens
                 const height = width / ratio;
 
-                // Adicionar a imagem ao PDF
                 pdf.addImage(imgData, 'PNG', 10, 10, width, height);
                 pdf.save('resumo-gestacao-bovina.pdf');
+            });
+        });
+        
+        // Lógica para o Modal de Aviso Beta
+        document.addEventListener('DOMContentLoaded', () => {
+            const betaModal = document.getElementById('beta-modal');
+            const modalContent = document.getElementById('modal-content');
+            const closeModalBtn = document.getElementById('close-modal-btn');
+
+            if (!sessionStorage.getItem('betaWarningShown')) {
+                betaModal.classList.remove('hidden');
+                // Adiciona um pequeno atraso para a animação funcionar
+                setTimeout(() => {
+                    modalContent.classList.remove('opacity-0', 'translate-y-4');
+                }, 50);
+            }
+            
+            closeModalBtn.addEventListener('click', () => {
+                sessionStorage.setItem('betaWarningShown', 'true');
+                modalContent.classList.add('opacity-0', 'translate-y-4');
+                setTimeout(() => {
+                   betaModal.classList.add('hidden');
+                }, 300); // tempo da transição
             });
         });
 
