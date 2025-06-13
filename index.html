@@ -14,16 +14,22 @@
     <!-- Inclusão das bibliotecas para gerar PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
 
     <style>
         /* Estilos personalizados */
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: 'Open Sans', sans-serif;
             background-color: #f0f4f8; /* Fundo cinza claro */
             display: flex;
             flex-direction: column;
             min-height: 100vh;
+        }
+        h1, h2, h3, h4, .font-heading {
+             font-family: 'Montserrat', sans-serif;
         }
         main {
             flex-grow: 1;
@@ -36,23 +42,24 @@
         }
         .btn {
             transition: background-color 0.3s, transform 0.2s;
+            font-family: 'Montserrat', sans-serif;
         }
         .btn:hover {
             transform: translateY(-2px);
         }
         .btn-primary {
-            background-color: #2c5282; /* Azul escuro */
+            background-color: #3730a3;
             color: white;
         }
         .btn-primary:hover {
-            background-color: #2a4365;
+            background-color: #312b88;
         }
         .btn-secondary {
-            background-color: #a0aec0; /* Cinza */
-            color: #1a202c;
+            background-color: #e5e7eb; /* Cinza claro */
+            color: #374151; /* Cinza escuro */
         }
         .btn-secondary:hover {
-            background-color: #718096;
+            background-color: #d1d5db;
         }
         #results-container {
             max-height: 0;
@@ -65,7 +72,7 @@
             opacity: 1;
         }
         .timeline-item {
-            border-left: 3px solid #4299e1; /* Azul para a linha do tempo */
+            border-left: 3px solid #6366f1; /* Tom de roxo */
             position: relative;
         }
         .timeline-item::before {
@@ -77,16 +84,30 @@
             width: 15px;
             height: 15px;
             border-radius: 50%;
-            background-color: #4299e1;
+            background-color: #6366f1;
             border: 3px solid white;
         }
         .custom-title-color {
-             color: #1a3a5f; /* Cor personalizada do site Repro FIV */
+             color: #3730a3;
         }
         .footer {
-            background-color: #1a3a5f;
+            background-color: #3730a3;
             color: white;
         }
+        .btn-gradient-animated {
+            background-image: linear-gradient(to right, #d1d5db 0%, #9ca3af 50%, #d1d5db 100%);
+            background-size: 200% auto;
+            color: #1f2937;
+            transition: background-position 0.5s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+        .btn-gradient-animated:hover {
+            background-position: right center;
+        }
+
     </style>
 </head>
 <body>
@@ -94,7 +115,7 @@
     <!-- Modal de Aviso Beta -->
     <div id="beta-modal" class="hidden fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center p-4 z-50">
         <div class="bg-white rounded-lg shadow-xl p-6 md:p-8 max-w-lg w-full text-center transform transition-all opacity-0 translate-y-4" id="modal-content">
-            <h2 class="text-2xl font-bold text-yellow-600 mb-4">Atenção: Versão Beta</h2>
+            <h2 class="text-2xl font-bold text-yellow-600 mb-4 font-heading">Atenção: Versão Beta</h2>
             <p class="text-gray-700 mb-4">
                 Olá! Esta calculadora é uma versão de testes e está em contínuo desenvolvimento. Estamos trabalhando para adicionar melhorias e novos recursos em breve.
             </p>
@@ -110,7 +131,7 @@
         <div class="w-full max-w-3xl mx-auto">
             <div class="calculator-card p-6 md:p-8">
                 <header class="text-center mb-8">
-                    <h1 class="text-3xl md:text-4xl font-bold custom-title-color">Calculadora de Gestação Bovina</h1>
+                    <h1 class="text-3xl md:text-4xl font-bold custom-title-color font-heading">Calculadora de Gestação Bovina</h1>
                     <p class="text-gray-600 mt-2">Insira os dados para obter um cronograma completo da gestação.</p>
                 </header>
 
@@ -118,11 +139,11 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                     <div>
                         <label for="conceptionDate" class="block text-sm font-medium text-gray-700 mb-1">Data da Concepção / Inseminação</label>
-                        <input type="date" id="conceptionDate" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <input type="date" id="conceptionDate" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                     </div>
                     <div>
                         <label for="breed" class="block text-sm font-medium text-gray-700 mb-1">Raça (ajusta a duração da gestação)</label>
-                        <select id="breed" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <select id="breed" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
                             <option value="283" selected>Padrão / Mestiça (283 dias)</option>
                             <option value="285">Angus (285 dias)</option>
                             <option value="282">Holandesa (282 dias)</option>
@@ -162,9 +183,10 @@
     <!-- Rodapé -->
     <footer class="footer mt-12 py-8 text-center">
         <div class="container mx-auto px-4">
-            <p class="mb-4">&copy; 2024 Repro FIV. Todos os direitos reservados.</p>
+            <p class="mb-4 font-semibold">&copy; 2025 Repro FIV. Todos os direitos reservados.</p>
             <p class="text-gray-300 text-sm mb-6">Uberaba, Minas Gerais, Brasil</p>
-            <a href="https://repro-fiv.vercel.app/#/" target="_blank" rel="noopener noreferrer" class="bg-white text-gray-800 font-bold py-2 px-6 rounded-lg hover:bg-gray-200 transition-colors">
+            <a href="https://repro-fiv.vercel.app/#/" target="_blank" rel="noopener noreferrer" class="btn-gradient-animated font-bold py-2 px-6 rounded-lg">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-left-circle"><circle cx="12" cy="12" r="10"></circle><polyline points="12 8 8 12 12 16"></polyline><line x1="16" y1="12" x2="8" y2="12"></line></svg>
                 Voltar ao site de estudos
             </a>
         </div>
@@ -244,12 +266,12 @@
             
             resultsContent.innerHTML = `
                 <div class="text-center mb-6">
-                    <h2 class="text-2xl font-bold text-gray-800">Resumo da Gestação</h2>
+                    <h2 class="text-2xl font-bold text-gray-800 font-heading">Resumo da Gestação</h2>
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center mb-8">
-                    <div class="bg-blue-50 p-4 rounded-lg">
-                        <p class="text-sm text-blue-800 font-semibold">Data da Concepção</p>
-                        <p class="text-xl font-bold text-blue-900">${formatDate(conceptionDate)}</p>
+                    <div class="bg-indigo-50 p-4 rounded-lg">
+                        <p class="text-sm text-indigo-800 font-semibold">Data da Concepção</p>
+                        <p class="text-xl font-bold text-indigo-900">${formatDate(conceptionDate)}</p>
                     </div>
                     <div class="bg-green-50 p-4 rounded-lg">
                         <p class="text-sm text-green-800 font-semibold">Data Prevista do Parto</p>
@@ -262,19 +284,19 @@
                 </div>
 
                 <div class="mt-8">
-                    <h3 class="text-xl font-bold text-gray-800 text-center mb-6">Linha do Tempo e Eventos Chave</h3>
+                    <h3 class="text-xl font-bold text-gray-800 text-center mb-6 font-heading">Linha do Tempo e Eventos Chave</h3>
                     <div class="space-y-6">
-                        <div class="timeline-item pl-8 pb-4"><p class="font-semibold text-gray-800">Diagnóstico de Gestação (Ultrassom)</p><p class="text-lg font-bold text-blue-600">${formatDate(ultrasoundDate)}</p><p class="text-sm text-gray-600">Recomendação: Realizar ultrassom para confirmar a prenhez e avaliar a viabilidade fetal.</p></div>
-                        <div class="timeline-item pl-8 pb-4"><p class="font-semibold text-gray-800">Janela para Sexagem Fetal</p><p class="text-lg font-bold text-blue-600">${formatDate(sexingStartDate)} a ${formatDate(sexingEndDate)}</p><p class="text-sm text-gray-600">Recomendação: Período ideal para identificar o sexo do bezerro por ultrassonografia, se desejado.</p></div>
-                        <div class="timeline-item pl-8 pb-4"><p class="font-semibold text-gray-800">Início do Terço Final</p><p class="text-lg font-bold text-blue-600">${formatDate(finalThirdDate)}</p><p class="text-sm text-gray-600">Alerta: Aumentar o monitoramento nutricional. 75% do crescimento fetal ocorre a partir daqui.</p></div>
-                        <div class="timeline-item pl-8 pb-4"><p class="font-semibold text-gray-800">Início da Secagem (Gado de Leite)</p><p class="text-lg font-bold text-blue-600">${formatDate(dryingOffDate)}</p><p class="text-sm text-gray-600">Recomendação: Iniciar o período de secagem para garantir a recuperação da glândula mamária e a qualidade do colostro.</p></div>
+                        <div class="timeline-item pl-8 pb-4"><p class="font-semibold text-gray-800">Diagnóstico de Gestação (Ultrassom)</p><p class="text-lg font-bold text-indigo-600">${formatDate(ultrasoundDate)}</p><p class="text-sm text-gray-600">Recomendação: Realizar ultrassom para confirmar a prenhez e avaliar a viabilidade fetal.</p></div>
+                        <div class="timeline-item pl-8 pb-4"><p class="font-semibold text-gray-800">Janela para Sexagem Fetal</p><p class="text-lg font-bold text-indigo-600">${formatDate(sexingStartDate)} a ${formatDate(sexingEndDate)}</p><p class="text-sm text-gray-600">Recomendação: Período ideal para identificar o sexo do bezerro por ultrassonografia, se desejado.</p></div>
+                        <div class="timeline-item pl-8 pb-4"><p class="font-semibold text-gray-800">Início do Terço Final</p><p class="text-lg font-bold text-indigo-600">${formatDate(finalThirdDate)}</p><p class="text-sm text-gray-600">Alerta: Aumentar o monitoramento nutricional. 75% do crescimento fetal ocorre a partir daqui.</p></div>
+                        <div class="timeline-item pl-8 pb-4"><p class="font-semibold text-gray-800">Início da Secagem (Gado de Leite)</p><p class="text-lg font-bold text-indigo-600">${formatDate(dryingOffDate)}</p><p class="text-sm text-gray-600">Recomendação: Iniciar o período de secagem para garantir a recuperação da glândula mamária e a qualidade do colostro.</p></div>
                         <div class="timeline-item pl-8 pb-4 border-l-orange-500"><p class="font-semibold text-gray-800">Início do Pré-Parto</p><p class="text-lg font-bold text-orange-600">${formatDate(prepartumDate)}</p><p class="text-sm text-gray-600">Recomendação: Mover a vaca para o piquete-maternidade e intensificar a observação de sinais de parto.</p></div>
                     </div>
                 </div>
                 
                 <div class="mt-10 pt-6 border-t-2 border-dashed">
-                     <h3 class="text-xl font-bold text-gray-800 text-center mb-4">Fase Atual e Recomendações de Manejo</h3>
-                     <div class="bg-gray-100 p-6 rounded-lg"><h4 class="font-bold text-lg text-gray-800">${currentPhaseTitle}</h4><p class="text-gray-700 mt-2">${currentPhaseRecommendation}</p></div>
+                     <h3 class="text-xl font-bold text-gray-800 text-center mb-4 font-heading">Fase Atual e Recomendações de Manejo</h3>
+                     <div class="bg-gray-100 p-6 rounded-lg"><h4 class="font-bold text-lg text-gray-800 font-heading">${currentPhaseTitle}</h4><p class="text-gray-700 mt-2">${currentPhaseRecommendation}</p></div>
                 </div>
             `;
             
