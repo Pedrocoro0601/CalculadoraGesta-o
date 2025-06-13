@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Gestação Bovina</title>
+    <!-- Inclusão do Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Inclusão da biblioteca Day.js para datas -->
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/dayjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/plugin/utc.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/plugin/timezone.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1.11.10/locale/pt-br.js"></script>
+    <!-- Inclusão das bibliotecas para gerar PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <style>
+        /* Estilos personalizados */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8; /* Fundo cinza claro */
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        main {
+            flex-grow: 1;
+        }
+        .calculator-card {
+            background-color: white;
+            border-radius: 1rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease-in-out;
+        }
+        .btn {
+            transition: background-color 0.3s, transform 0.2s;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+        .btn-primary {
+            background-color: #2c5282; /* Azul escuro */
+            color: white;
+        }
+        .btn-primary:hover {
+            background-color: #2a4365;
+        }
+        .btn-secondary {
+            background-color: #a0aec0; /* Cinza */
+            color: #1a202c;
+        }
+        .btn-secondary:hover {
+            background-color: #718096;
+        }
+        #results-container {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.7s ease-in-out, opacity 0.5s ease-in-out;
+            opacity: 0;
+        }
+        #results-container.show {
+            max-height: 2000px; /* Altura suficiente para o conteúdo */
+            opacity: 1;
+        }
+        .timeline-item {
+            border-left: 3px solid #4299e1; /* Azul para a linha do tempo */
+            position: relative;
+        }
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -9px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            background-color: #4299e1;
+            border: 3px solid white;
+        }
+        .custom-title-color {
+             color: #1a3a5f; /* Cor personalizada do site Repro FIV */
+        }
+        .footer {
+            background-color: #1a3a5f;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <main class="flex items-center justify-center p-4">
+        <div class="w-full max-w-3xl mx-auto">
+            <div class="calculator-card p-6 md:p-8">
+                <header class="text-center mb-8">
+                    <h1 class="text-3xl md:text-4xl font-bold custom-title-color">Calculadora de Gestação Bovina</h1>
+                    <p class="text-gray-600 mt-2">Insira os dados para obter um cronograma completo da gestação.</p>
+                </header>
+
+                <!-- Área de Inputs -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div>
+                        <label for="conceptionDate" class="block text-sm font-medium text-gray-700 mb-1">Data da Concepção / Inseminação</label>
+                        <input type="date" id="conceptionDate" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label for="breed" class="block text-sm font-medium text-gray-700 mb-1">Raça (ajusta a duração da gestação)</label>
+                        <select id="breed" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                            <option value="283" selected>Padrão / Mestiça (283 dias)</option>
+                            <option value="285">Angus (285 dias)</option>
+                            <option value="282">Holandesa (282 dias)</option>
+                            <option value="292">Nelore (292 dias)</option>
+                            <option value="289">Brahman (289 dias)</option>
+                            <option value="286">Simental (286 dias)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Botões de Ação -->
+                <div class="flex flex-col sm:flex-row gap-4 justify-center mt-8">
+                    <button id="calculateBtn" class="btn btn-primary w-full sm:w-auto px-8 py-3 rounded-lg font-semibold text-lg">
+                        Calcular
+                    </button>
+                    <button id="clearBtn" class="btn btn-secondary w-full sm:w-auto px-8 py-3 rounded-lg font-semibold text-lg">
+                        Limpar
+                    </button>
+                     <button id="pdfBtn" class="btn btn-secondary w-full sm:w-auto px-8 py-3 rounded-lg font-semibold text-lg hidden">
+                        Salvar PDF
+                    </button>
+                </div>
+                 <div id="error-message" class="text-center text-red-500 mt-4 font-semibold"></div>
+            </div>
+
+            <!-- Área de Resultados -->
+            <div id="results-container" class="mt-8">
+                <div id="print-area" class="calculator-card p-6 md:p-8">
+                    <div id="results-content">
+                        <!-- O conteúdo dos resultados será inserido aqui pelo JavaScript -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <!-- Rodapé -->
+    <footer class="footer mt-12 py-8 text-center">
+        <div class="container mx-auto px-4">
+            <p class="mb-4">&copy;  2025 - Guia de estudos.</p>
+            <p class="text-gray-300 text-sm mb-6">Uberaba, Minas Gerais, Brasil</p>
+            <a href="https://repro-fiv.vercel.app/#/" target="_blank" rel="noopener noreferrer" class="bg-white text-gray-800 font-bold py-2 px-6 rounded-lg hover:bg-gray-200 transition-colors">
+                Voltar ao site de estudos
+            </a>
+        </div>
+    </footer>
+
+
+    <script>
+        // Configuração inicial do Day.js
+        dayjs.extend(dayjs_plugin_utc);
+        dayjs.extend(dayjs_plugin_timezone);
+        dayjs.locale('pt-br');
+        dayjs.tz.setDefault("America/Sao_Paulo");
+
+        // Seleção de elementos do DOM
+        const conceptionDateInput = document.getElementById('conceptionDate');
+        const breedSelect = document.getElementById('breed');
+        const calculateBtn = document.getElementById('calculateBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const pdfBtn = document.getElementById('pdfBtn');
+        const resultsContainer = document.getElementById('results-container');
+        const resultsContent = document.getElementById('results-content');
+        const errorMessage = document.getElementById('error-message');
+
+        // Função para formatar a data
+        const formatDate = (date) => date ? dayjs(date).format('DD/MM/YYYY') : 'N/A';
+        
+        // Função para adicionar dias a uma data
+        const addDays = (date, days) => dayjs(date).add(days, 'day');
+
+        // Event listener para o botão de calcular
+        calculateBtn.addEventListener('click', () => {
+            const conceptionDateStr = conceptionDateInput.value;
+            if (!conceptionDateStr) {
+                errorMessage.textContent = 'Por favor, insira uma data de concepção válida.';
+                resultsContainer.classList.remove('show');
+                pdfBtn.classList.add('hidden');
+                return;
+            }
+            errorMessage.textContent = '';
+
+            const conceptionDate = dayjs(conceptionDateStr).startOf('day');
+            const gestationDays = parseInt(breedSelect.value, 10);
+            const today = dayjs().startOf('day');
+            const dueDate = addDays(conceptionDate, gestationDays);
+            const currentGestationDays = today.diff(conceptionDate, 'day');
+
+            if (currentGestationDays < 0) {
+                 errorMessage.textContent = 'A data de concepção não pode ser no futuro.';
+                 resultsContainer.classList.remove('show');
+                 pdfBtn.classList.add('hidden');
+                 return;
+            }
+
+            const ultrasoundDate = addDays(conceptionDate, 30);
+            const sexingStartDate = addDays(conceptionDate, 55);
+            const sexingEndDate = addDays(conceptionDate, 70);
+            const finalThirdDate = addDays(conceptionDate, 191);
+            const dryingOffDate = addDays(dueDate, -60);
+            const prepartumDate = addDays(dueDate, -21);
+            
+            let currentPhaseTitle = '';
+            let currentPhaseRecommendation = '';
+
+            if (currentGestationDays <= 95) {
+                currentPhaseTitle = 'Primeiro Terço (1-95 dias)';
+                currentPhaseRecommendation = 'Foco na implantação do embrião e desenvolvimento inicial. Evite estresse excessivo e garanta uma nutrição balanceada para prevenir perdas embrionárias. Mantenha o calendário sanitário em dia.';
+            } else if (currentGestationDays <= 190) {
+                currentPhaseTitle = 'Segundo Terço (96-190 dias)';
+                currentPhaseRecommendation = 'Fase de crescimento fetal mais lento, mas crucial para o desenvolvimento de órgãos. Mantenha a condição corporal ideal da vaca e realize o monitoramento sanitário. É a janela ideal para a sexagem fetal.';
+            } else if (currentGestationDays <= gestationDays) {
+                currentPhaseTitle = 'Terceiro Terço (a partir de 191 dias)';
+                currentPhaseRecommendation = 'Período de rápido crescimento fetal (75% do peso do bezerro é ganho aqui). Aumente as exigências de energia, proteína e minerais na dieta. Aplique as vacinas do pré-parto e prepare o piquete-maternidade.';
+            } else {
+                 currentPhaseTitle = 'Pós-Parto';
+                 currentPhaseRecommendation = 'A gestação foi concluída. Foco nos cuidados com a vaca e o bezerro recém-nascido, garantindo a ingestão do colostro nas primeiras horas de vida.';
+            }
+            
+            resultsContent.innerHTML = `
+                <div class="text-center mb-6">
+                    <h2 class="text-2xl font-bold text-gray-800">Resumo da Gestação</h2>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center mb-8">
+                    <div class="bg-blue-50 p-4 rounded-lg">
+                        <p class="text-sm text-blue-800 font-semibold">Data da Concepção</p>
+                        <p class="text-xl font-bold text-blue-900">${formatDate(conceptionDate)}</p>
+                    </div>
+                    <div class="bg-green-50 p-4 rounded-lg">
+                        <p class="text-sm text-green-800 font-semibold">Data Prevista do Parto</p>
+                        <p class="text-xl font-bold text-green-900">${formatDate(dueDate)}</p>
+                    </div>
+                    <div class="bg-yellow-50 p-4 rounded-lg">
+                        <p class="text-sm text-yellow-800 font-semibold">Dias de Gestação Hoje</p>
+                        <p class="text-xl font-bold text-yellow-900">${currentGestationDays >= 0 && currentGestationDays <= gestationDays ? currentGestationDays : 'Finalizada'}</p>
+                    </div>
+                </div>
+
+                <div class="mt-8">
+                    <h3 class="text-xl font-bold text-gray-800 text-center mb-6">Linha do Tempo e Eventos Chave</h3>
+                    <div class="space-y-6">
+                        <div class="timeline-item pl-8 pb-4"><p class="font-semibold text-gray-800">Diagnóstico de Gestação (Ultrassom)</p><p class="text-lg font-bold text-blue-600">${formatDate(ultrasoundDate)}</p><p class="text-sm text-gray-600">Recomendação: Realizar ultrassom para confirmar a prenhez e avaliar a viabilidade fetal.</p></div>
+                        <div class="timeline-item pl-8 pb-4"><p class="font-semibold text-gray-800">Janela para Sexagem Fetal</p><p class="text-lg font-bold text-blue-600">${formatDate(sexingStartDate)} a ${formatDate(sexingEndDate)}</p><p class="text-sm text-gray-600">Recomendação: Período ideal para identificar o sexo do bezerro por ultrassonografia, se desejado.</p></div>
+                        <div class="timeline-item pl-8 pb-4"><p class="font-semibold text-gray-800">Início do Terço Final</p><p class="text-lg font-bold text-blue-600">${formatDate(finalThirdDate)}</p><p class="text-sm text-gray-600">Alerta: Aumentar o monitoramento nutricional. 75% do crescimento fetal ocorre a partir daqui.</p></div>
+                        <div class="timeline-item pl-8 pb-4"><p class="font-semibold text-gray-800">Início da Secagem (Gado de Leite)</p><p class="text-lg font-bold text-blue-600">${formatDate(dryingOffDate)}</p><p class="text-sm text-gray-600">Recomendação: Iniciar o período de secagem para garantir a recuperação da glândula mamária e a qualidade do colostro.</p></div>
+                        <div class="timeline-item pl-8 pb-4 border-l-orange-500"><p class="font-semibold text-gray-800">Início do Pré-Parto</p><p class="text-lg font-bold text-orange-600">${formatDate(prepartumDate)}</p><p class="text-sm text-gray-600">Recomendação: Mover a vaca para o piquete-maternidade e intensificar a observação de sinais de parto.</p></div>
+                    </div>
+                </div>
+                
+                <div class="mt-10 pt-6 border-t-2 border-dashed">
+                     <h3 class="text-xl font-bold text-gray-800 text-center mb-4">Fase Atual e Recomendações de Manejo</h3>
+                     <div class="bg-gray-100 p-6 rounded-lg"><h4 class="font-bold text-lg text-gray-800">${currentPhaseTitle}</h4><p class="text-gray-700 mt-2">${currentPhaseRecommendation}</p></div>
+                </div>
+            `;
+            
+            resultsContainer.classList.add('show');
+            pdfBtn.classList.remove('hidden');
+        });
+
+        clearBtn.addEventListener('click', () => {
+            conceptionDateInput.value = '';
+            breedSelect.value = '283';
+            resultsContainer.classList.remove('show');
+            pdfBtn.classList.add('hidden');
+            errorMessage.textContent = '';
+            resultsContent.innerHTML = '';
+        });
+
+        pdfBtn.addEventListener('click', () => {
+            const { jsPDF } = window.jspdf;
+            const content = document.getElementById('print-area');
+            
+            // Usar html2canvas para capturar o conteúdo como uma imagem
+            html2canvas(content, { scale: 2 }).then(canvas => {
+                const imgData = canvas.toDataURL('image/png');
+                const pdf = new jsPDF('p', 'mm', 'a4');
+                const pdfWidth = pdf.internal.pageSize.getWidth();
+                const pdfHeight = pdf.internal.pageSize.getHeight();
+                const canvasWidth = canvas.width;
+                const canvasHeight = canvas.height;
+                const ratio = canvasWidth / canvasHeight;
+                const width = pdfWidth - 20; // com margens
+                const height = width / ratio;
+
+                // Adicionar a imagem ao PDF
+                pdf.addImage(imgData, 'PNG', 10, 10, width, height);
+                pdf.save('resumo-gestacao-bovina.pdf');
+            });
+        });
+
+    </script>
+</body>
+</html>
